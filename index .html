@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金融佣金试算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* 理想官方品牌色 */
+        :root {
+            --deep-green: #002D28;
+            --ui-green: #057568;
+            --sand-gold: #CEA472;
+            --black: #000000;
+            --black-80: #333333;
+            --black-60: #666666;
+            --black-20: #CCCCCC;
+        }
+
+        .header {
+            background: var(--deep-green);
+            color: white;
+            padding: 24px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 3px;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 32px auto;
+            padding: 0 32px 32px;
+        }
+
+        .calculator-wrapper {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,45,40,0.08);
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            min-height: 750px;
+        }
+
+        .left-section {
+            padding: 40px;
+            border-right: 1px solid var(--black-20);
+        }
+
+        .right-section {
+            background: linear-gradient(135deg, #f8f8f8 0%, #f0f0f0 100%);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-block {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--deep-green);
+            margin-bottom: 16px;
+            padding-left: 12px;
+            border-left: 4px solid var(--sand-gold);
+        }
+
+        /* 输入行 */
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group-full {
+            grid-column: 1 / -1;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--black-80);
+            margin-bottom: 8px;
+        }
+
+        .input-label-helper {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--black-60);
+            margin-left: 4px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1.5px solid var(--black-20);
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+            transition: all 0.2s;
+            color: var(--black-80);
+            border-color: var(--sand-gold);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--ui-green);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(5,117,104,0.1);
+        }
+
+        .input-field:disabled,
+        .input-field[readonly] {
+            background: #f5f5f5;
+            color: var(--black-60);
+            cursor: not-allowed;
+            border-color: var(--black-20);
+        }
+
+        .input-unit {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--black-60);
+            font-size: 14px;
+        }
+
+        /* 银行配置区域 */
+        .bank-config {
+            background: #fafafa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .bank-row {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .bank-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .bank-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--deep-green);
+        }
+
+        /* 结果展示 */
+        .result-main {
+            background: linear-gradient(135deg, var(--deep-green) 0%, #004d45 100%);
+            border-radius: 12px;
+            padding: 36px;
+            text-align: center;
+            color: white;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 20px rgba(0,45,40,0.15);
+        }
+
+        .result-label {
+            font-size: 14px;
+            opacity: 0.85;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .result-value {
+            font-size: 58px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .result-unit {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .result-sub {
+            font-size: 13px;
+            opacity: 0.75;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* 详细信息 */
+        .details-card {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 13px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: var(--black-60);
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--black-80);
+        }
+
+        .detail-row.highlight {
+            padding-top: 18px;
+            margin-top: 8px;
+            border-top: 2px solid #e8e8e8;
+        }
+
+        .detail-row.highlight .detail-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--deep-green);
+        }
+
+        .detail-row.highlight .detail-value {
+            font-size: 20px;
+            color: var(--sand-gold);
+        }
+
+        /* 提示框 */
+        .info-notice {
+            background: linear-gradient(135deg, #fffbf5 0%, #fff5e6 100%);
+            border-left: 4px solid var(--sand-gold);
+            padding: 16px 18px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--black-60);
+            line-height: 1.6;
+            margin-top: auto;
+        }
+
+        .info-notice strong {
+            color: var(--black-80);
+        }
+
+        /* 计算按钮 */
+        .calc-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--ui-green) 0%, #046b5f 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 12px;
+            box-shadow: 0 4px 12px rgba(5,117,104,0.2);
+        }
+
+        .calc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(5,117,104,0.3);
+        }
+
+        .calc-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 银行明细表格 */
+        .bank-details-table {
+            width: 100%;
+            margin-top: 16px;
+            border-collapse: collapse;
+        }
+
+        .bank-details-table th,
+        .bank-details-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        .bank-details-table th {
+            background: #f8f8f8;
+            font-weight: 600;
+            color: var(--deep-green);
+        }
+
+        .bank-details-table td {
+            color: var(--black-80);
+        }
+
+        .bank-details-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        @media (max-width: 1200px) {
+            .calculator-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .left-section {
+                border-right: none;
+                border-bottom: 1px solid var(--black-20);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+
+            .bank-row {
+                grid-template-columns: 1fr;
+            }
+
+            .result-value {
+                font-size: 46px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <div class="logo">金融佣金试算器</div>
+                <div class="header-subtitle">Commission Calculator · 专业版</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="calculator-wrapper">
+            <div class="calculator-grid">
+                <!-- 左侧：参数输入 -->
+                <div class="left-section">
+                    <!-- 基础费率 -->
+                    <div class="section-block">
+                        <div class="section-title">基础费率设置</div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label class="input-label">年化费率<span class="input-label-helper">(固定)</span></label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="annualRate" class="input-field" value="1.99" readonly>
+                                    <span class="input-unit">%</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">平均年限<span class="input-label-helper">(可编辑)</span></label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="avgYears" class="input-field" value="3" min="1" max="10" step="0.1">
+                                    <span class="input-unit">年</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-group input-group-full">
+                                <label class="input-label">平均放款额<span class="input-label-helper">(可编辑)</span></label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="avgLoanAmount" class="input-field" value="200000" step="1000">
+                                    <span class="input-unit">元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 银行配置 -->
+                    <div class="section-block">
+                        <div class="section-title">银行市占率配置</div>
+
+                        <div class="bank-config">
+                            <div class="bank-row">
+                                <div class="bank-name">中国银行</div>
+                                <div class="input-group">
+                                    <label class="input-label">市占率</label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="bocShare" class="input-field" value="25" min="0" max="100" step="0.1">
+                                        <span class="input-unit">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bank-row">
+                                <div class="bank-name">建设银行</div>
+                                <div class="input-group">
+                                    <label class="input-label">市占率</label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="ccbShare" class="input-field" value="25" min="0" max="100" step="0.1">
+                                        <span class="input-unit">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bank-row">
+                                <div class="bank-name">交通银行</div>
+                                <div class="input-group">
+                                    <label class="input-label">市占率</label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="bcmShare" class="input-field" value="25" min="0" max="100" step="0.1">
+                                        <span class="input-unit">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bank-row">
+                                <div class="bank-name">中信银行</div>
+                                <div class="input-group">
+                                    <label class="input-label">市占率</label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="citicShare" class="input-field" value="25" min="0" max="100" step="0.1">
+                                        <span class="input-unit">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 放款数据 -->
+                    <div class="section-block">
+                        <div class="section-title">放款数据</div>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label class="input-label">放款台数<span class="input-label-helper">(可编辑)</span></label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="loanCount" class="input-field" value="100" min="0" step="1">
+                                    <span class="input-unit">台</span>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">总放款额<span class="input-label-helper">(可编辑)</span></label>
+                                <div class="input-wrapper">
+                                    <input type="number" id="totalLoanAmount" class="input-field" value="20000000" step="10000">
+                                    <span class="input-unit">元</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="calc-btn" onclick="calculate()">💰 立即计算佣金</button>
+                </div>
+
+                <!-- 右侧：结果展示 -->
+                <div class="right-section">
+                    <!-- 总佣金 -->
+                    <div class="result-main">
+                        <div class="result-label">总佣金金额</div>
+                        <div>
+                            <span class="result-value" id="totalCommission">0</span>
+                        </div>
+                        <div class="result-unit">元</div>
+                        <div class="result-sub" id="avgCommission">平均每台佣金 0 元</div>
+                    </div>
+
+                    <!-- 详细信息 -->
+                    <div class="details-card">
+                        <div class="detail-row">
+                            <span class="detail-label">年化费率</span>
+                            <span class="detail-value" id="displayRate">1.99%</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">平均年限</span>
+                            <span class="detail-value" id="displayYears">3 年</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">平均放款额</span>
+                            <span class="detail-value" id="displayAvgLoan">200,000 元</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">放款台数</span>
+                            <span class="detail-value" id="displayCount">100 台</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">总放款额</span>
+                            <span class="detail-value" id="displayTotalLoan">20,000,000 元</span>
+                        </div>
+                        <div class="detail-row highlight">
+                            <span class="detail-label">平均每台佣金</span>
+                            <span class="detail-value" id="displayAvgCommission">0 元</span>
+                        </div>
+
+                        <!-- 银行明细 -->
+                        <table class="bank-details-table">
+                            <thead>
+                                <tr>
+                                    <th>银行</th>
+                                    <th>市占率</th>
+                                    <th>佣金金额</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bankDetailsBody">
+                                <!-- 动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 温馨提示 -->
+                    <div class="info-notice">
+                        <strong>💡 计算说明：</strong>佣金金额 = 总放款额 × (年化费率 - 结算底价) × 银行市占率 × 平均年限。本计算器结果仅供参考，实际佣金以最终结算为准。
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 格式化数字
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('zh-CN');
+        }
+
+        // 格式化百分比
+        function formatPercent(num) {
+            return num.toFixed(2);
+        }
+
+        // 主计算函数
+        function calculate() {
+            // 获取基础数据
+            const annualRate = parseFloat(document.getElementById('annualRate').value) || 0;
+            const avgYears = parseFloat(document.getElementById('avgYears').value) || 0;
+            const avgLoanAmount = parseFloat(document.getElementById('avgLoanAmount').value) || 0;
+            const loanCount = parseFloat(document.getElementById('loanCount').value) || 0;
+            const totalLoanAmount = parseFloat(document.getElementById('totalLoanAmount').value) || 0;
+
+            // 获取银行数据（结算底价固定在代码中，不对外显示）
+            // 根据Excel文件中的实际数据更新：中行建行是1.9%，交行中信是1.7%
+            const banks = [
+                {
+                    name: '中国银行',
+                    rate: 1.9, // 结算底价（更正为1.9%）
+                    share: parseFloat(document.getElementById('bocShare').value) || 0
+                },
+                {
+                    name: '建设银行',
+                    rate: 1.9, // 结算底价（更正为1.9%）
+                    share: parseFloat(document.getElementById('ccbShare').value) || 0
+                },
+                {
+                    name: '交通银行',
+                    rate: 1.7, // 结算底价
+                    share: parseFloat(document.getElementById('bcmShare').value) || 0
+                },
+                {
+                    name: '中信银行',
+                    rate: 1.7, // 结算底价
+                    share: parseFloat(document.getElementById('citicShare').value) || 0
+                }
+            ];
+
+            // 计算每个银行的佣金
+            let totalCommission = 0;
+            const bankDetails = [];
+
+            banks.forEach(bank => {
+                // 利差 = 年化费率 - 结算底价
+                const rateDiff = annualRate - bank.rate;
+
+                // 该银行的放款额 = 总放款额 × 市占率
+                const bankLoanAmount = totalLoanAmount * (bank.share / 100);
+
+                // 该银行的佣金 = 该银行放款额 × 利差 × 平均年限
+                const commission = bankLoanAmount * (rateDiff / 100) * avgYears;
+
+                totalCommission += commission;
+
+                bankDetails.push({
+                    name: bank.name,
+                    share: bank.share,
+                    commission: commission
+                });
+            });
+
+            // 平均每台佣金
+            const avgCommission = loanCount > 0 ? totalCommission / loanCount : 0;
+
+            // 更新主要结果显示
+            document.getElementById('totalCommission').textContent = formatNumber(totalCommission);
+            document.getElementById('avgCommission').textContent = `平均每台佣金 ${formatNumber(avgCommission)} 元`;
+
+            // 更新详细信息
+            document.getElementById('displayRate').textContent = `${formatPercent(annualRate)}%`;
+            document.getElementById('displayYears').textContent = `${avgYears} 年`;
+            document.getElementById('displayAvgLoan').textContent = `${formatNumber(avgLoanAmount)} 元`;
+            document.getElementById('displayCount').textContent = `${formatNumber(loanCount)} 台`;
+            document.getElementById('displayTotalLoan').textContent = `${formatNumber(totalLoanAmount)} 元`;
+            document.getElementById('displayAvgCommission').textContent = `${formatNumber(avgCommission)} 元`;
+
+            // 更新银行明细表格
+            const tbody = document.getElementById('bankDetailsBody');
+            tbody.innerHTML = '';
+
+            bankDetails.forEach(detail => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${detail.name}</td>
+                    <td>${formatPercent(detail.share)}%</td>
+                    <td>${formatNumber(detail.commission)} 元</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 页面加载时执行初始计算
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加输入框实时计算
+            const inputs = document.querySelectorAll('.input-field:not([readonly])');
+            inputs.forEach(input => {
+                input.addEventListener('input', calculate);
+            });
+
+            // 放款数变化时同步更新总放款额
+            document.getElementById('loanCount').addEventListener('input', function() {
+                const count = parseFloat(this.value) || 0;
+                const avgAmount = parseFloat(document.getElementById('avgLoanAmount').value) || 0;
+                document.getElementById('totalLoanAmount').value = count * avgAmount;
+                calculate();
+            });
+
+            // 平均放款额变化时同步更新总放款额
+            document.getElementById('avgLoanAmount').addEventListener('input', function() {
+                const avgAmount = parseFloat(this.value) || 0;
+                const count = parseFloat(document.getElementById('loanCount').value) || 0;
+                document.getElementById('totalLoanAmount').value = count * avgAmount;
+                calculate();
+            });
+
+            // 总放款额变化时同步更新平均放款额
+            document.getElementById('totalLoanAmount').addEventListener('input', function() {
+                const total = parseFloat(this.value) || 0;
+                const count = parseFloat(document.getElementById('loanCount').value) || 0;
+                if (count > 0) {
+                    document.getElementById('avgLoanAmount').value = Math.round(total / count);
+                }
+                calculate();
+            });
+
+            // 初始计算
+            calculate();
+        });
+    </script>
+</body>
+</html>
